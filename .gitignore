@@ -1,0 +1,44 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Logs and local runtime files
+*.log
+logs/
+
+# yt-dlp and downloaded media
+*.part
+*.ytdl
+*.mp3
+*.mp4
+*.webm
+*.wav
+
+# Local configuration and secrets
+cookies.txt
+cookies*.txt
+config.local.*
+
+# IDE and operating-system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
