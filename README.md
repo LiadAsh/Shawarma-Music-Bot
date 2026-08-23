@@ -211,4 +211,6 @@ Enable **Developer Mode** in Discord, then right-click the server icon and choos
 
 ## License
 
-This repository is intended for private use. Add a license here before distributing the project publicly.
+Copyright (c) 2026 LiadAsh. All rights reserved.
+
+This software and its associated documentation files are the sole property of the copyright holder. Copying, modification, distribution, sublicensing, commercial use, or any other unauthorized use of this software, in whole or in part, is strictly prohibited without the express written permission of the copyright holder.
