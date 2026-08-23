@@ -104,12 +104,22 @@ def run_bot():
         else:
             await interaction.followup.send(embed=embed, ephemeral=ephemeral)
 
+    def parse_server_id(value: Optional[str]) -> Optional[int]:
+        if value is None:
+            return None
+        try:
+            server_id = int(value)
+        except ValueError:
+            return None
+        return server_id if server_id > 0 else None
+
     @bot.command(name="admin")
     @commands.dm_only()
-    async def admin_cmd(ctx: commands.Context, server_id: Optional[int] = None):
+    async def admin_cmd(ctx: commands.Context, server_id: Optional[str] = None):
         if ADMIN_USER_ID != str(ctx.author.id):
             return
 
+        server_id = parse_server_id(server_id)
         if server_id is None:
             print(f"[Admin] Missing server ID from user {ctx.author.id}")
             await ctx.send("Usage: `s!admin SERVER_ID` - add the server ID after the command.")
@@ -169,10 +179,11 @@ def run_bot():
 
     @bot.command(name="unban")
     @commands.dm_only()
-    async def unban_cmd(ctx: commands.Context, server_id: Optional[int] = None):
+    async def unban_cmd(ctx: commands.Context, server_id: Optional[str] = None):
         if ADMIN_USER_ID != str(ctx.author.id):
             return
 
+        server_id = parse_server_id(server_id)
         if server_id is None:
             print(f"[Unban] Missing server ID from user {ctx.author.id}")
             await ctx.send("Usage: `s!unban SERVER_ID` - add the server ID after the command.")
@@ -201,10 +212,11 @@ def run_bot():
 
     @bot.command(name="untime")
     @commands.dm_only()
-    async def untime_cmd(ctx: commands.Context, server_id: Optional[int] = None):
+    async def untime_cmd(ctx: commands.Context, server_id: Optional[str] = None):
         if ADMIN_USER_ID != str(ctx.author.id):
             return
 
+        server_id = parse_server_id(server_id)
         if server_id is None:
             print(f"[Untime] Missing server ID from user {ctx.author.id}")
             await ctx.send("Usage: `s!untime SERVER_ID` - add the server ID after the command.")
@@ -764,7 +776,7 @@ def run_bot():
             await send_embed(interaction, "Volume Saved", f"Next track will play at {percent}%.", color=CYAN)
 
     # --- NUKESLASH ---
-    @tree.command(name="nukeslash", description="Delete all slash commands for this guild 💣")
+    @tree.command(name="nukeslash", description="Clear this server's guild slash commands 💣")
     async def nukeslash(interaction: discord.Interaction):
         await interaction.response.defer()
         try:

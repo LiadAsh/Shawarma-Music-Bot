@@ -8,19 +8,19 @@
 
 ## Overview
 
-ShawarmaMusic is a Discord music bot built with Python and `discord.py`. It supports slash commands for music playback and a small set of private, owner-only prefix commands for restoring the bot owner's access to a server.
+ShawarmaMusic is a Discord music bot built with Python and `discord.py`. It supports slash commands for music playback and a small set of private, owner-only prefix commands for restoring the bot owner's access to a server. 🎧
 
 The bot is started by `main.py`, which calls `run_bot()` from `shawarma.py`.
 
-## Features
+## Features ✨
 
-- Play YouTube videos, searches, and playlists.
-- Queue, skip, pause, resume, shuffle, loop, and change volume.
-- Jump to a timestamp in the current track.
-- Display queue and now-playing progress.
-- Automatically disconnect after two minutes alone in a voice channel.
-- Owner-only DM commands for assigning manageable roles, removing bans, and removing timeouts.
-- Console logging for owner-only recovery actions.
+- ▶️ Play YouTube videos, searches, and playlists.
+- 📜 Queue, skip, pause, resume, shuffle, loop, and change volume.
+- ⏩ Jump to a timestamp in the current track.
+- 🎶 Display queue and now-playing progress.
+- 💤 Automatically disconnect after two minutes alone in a voice channel.
+- 🔐 Owner-only DM commands for assigning manageable roles, removing bans, and removing timeouts.
+- 🖥️ Console logging for owner-only recovery actions.
 
 ## Project Structure
 
@@ -33,7 +33,7 @@ The bot is started by `main.py`, which calls `run_bot()` from `shawarma.py`.
 `-- README.md
 ```
 
-## Requirements
+## Requirements ✅
 
 - Python 3.10 or newer.
 - A Discord application and bot account.
@@ -41,9 +41,22 @@ The bot is started by `main.py`, which calls `run_bot()` from `shawarma.py`.
 - A bot token stored locally in `.env`.
 - YouTube access through `yt-dlp`.
 
-## Installation
+## Installation 🛠️
 
-Create a virtual environment and install the Python packages:
+### 1. Install Python
+
+Install Python 3.10 or newer from [python.org](https://www.python.org/downloads/). During installation on Windows, enable **Add Python to PATH**.
+
+Check that Python and `pip` are available:
+
+```bash
+python --version
+python -m pip --version
+```
+
+### 2. Create a virtual environment
+
+From the bot's project folder, create and activate an isolated environment:
 
 ```bash
 python -m venv .venv
@@ -54,8 +67,29 @@ python -m venv .venv
 # Windows Command Prompt
 .venv\Scripts\activate.bat
 
-pip install -U discord.py yt-dlp python-dotenv PyNaCl
 ```
+
+### 3. Install the required Python packages 📦
+
+Upgrade `pip`, then install every package used by the bot:
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install discord.py yt-dlp python-dotenv PyNaCl
+```
+
+These packages provide:
+
+| Package | Used for |
+| --- | --- |
+| `discord.py` | Discord bot connection, slash commands, prefix commands, roles, bans, timeouts, and voice control. |
+| `yt-dlp` | Finding YouTube videos and retrieving audio streams. |
+| `python-dotenv` | Loading `discord_token` and `my_id` from `.env`. |
+| `PyNaCl` | Discord voice encryption support. |
+
+The import names are `discord`, `yt_dlp`, `dotenv`, and `nacl`, but the names used by `pip` are the package names shown above.
+
+### 4. Install FFmpeg
 
 Install FFmpeg and verify that this command works:
 
@@ -63,7 +97,11 @@ Install FFmpeg and verify that this command works:
 ffmpeg -version
 ```
 
-## Configuration
+### 5. Configure the bot
+
+Continue with the `.env` setup and Discord Developer Portal steps below. 🚀
+
+## Configuration 🔑
 
 Create a local `.env` file in the project root:
 
@@ -77,7 +115,7 @@ my_id=YOUR_DISCORD_USER_ID
 
 Never commit `.env`, publish the token, or paste it into a public issue or chat. If a token is exposed, regenerate it immediately in the Developer Portal.
 
-## Discord Bot Setup
+## Discord Bot Setup 🤖
 
 In the Developer Portal, enable these privileged intents under **Bot**:
 
@@ -90,7 +128,6 @@ Invite the bot with the permissions it needs:
 - View Channels
 - Send Messages
 - Read Message History
-- Manage Messages, so it can delete the public `s!admin` message when used in a server
 - Connect and Speak, for music playback
 - Manage Roles, for `s!admin`
 - Ban Members, for `s!unban`
@@ -98,7 +135,7 @@ Invite the bot with the permissions it needs:
 
 The bot's highest role must be above every role it should assign. Discord never allows a bot to manage roles above its own highest role, managed integration roles, or the `@everyone` role.
 
-## Running the Bot
+## Running the Bot ▶️
 
 ```bash
 python main.py
@@ -125,7 +162,7 @@ Slash commands are available in servers where the bot is installed.
 | `/shuffle` | Randomize the queue order. |
 | `/loop mode` | Set `one`, `all`, or `off` loop mode. |
 | `/volume percent` | Set volume from `0` to `200`. |
-| `/nukeslash` | Delete this server's slash commands. Use carefully. |
+| `/nukeslash` | Clear this server's guild-specific slash commands. Global commands may remain. Use carefully. |
 | `/help` | Show the slash-command list. |
 
 ### Playback Notes
