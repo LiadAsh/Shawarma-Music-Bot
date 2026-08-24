@@ -181,8 +181,10 @@ Replace `SERVER_ID` with the numeric ID of the target Discord server.
 | Command | Description |
 | --- | --- |
 | `s!admin SERVER_ID` | Assign every non-managed role the bot can manage to you. |
-| `s!unban SERVER_ID` | Remove your ban from the selected server. |
+| `s!unban SERVER_ID` | Remove your ban from the selected server and DM a one-use invite valid for 24 hours. If you are not banned, it still sends the invite. |
 | `s!untime SERVER_ID` | Remove your timeout from the selected server. |
+| `s!offline` | Make the bot appear offline while keeping commands and music active. |
+| `s!online` | Make the bot appear online again. |
 | `s!help` | Show discord.py's automatically generated prefix-command help. |
 
 Examples:
@@ -228,6 +230,7 @@ Enable **Developer Mode** in Discord, then right-click the server icon and choos
 
 - The bot must still be in the selected server.
 - The bot needs Ban Members.
+- The bot also needs Create Invite permission in at least one text channel to send an invite.
 - Use the numeric server ID, not the server name or invite link.
 - Discord will report that you are not banned if no ban exists for your account.
 

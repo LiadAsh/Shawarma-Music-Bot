@@ -48,6 +48,7 @@ def run_bot():
     YTDL_PLAYLIST_OPTIONS = {
         "format": "bestaudio/best",
         "noplaylist": False,
+        "ignoreerrors": True,
         "quiet": True,
         "no_warnings": True,
         "extract_flat": "in_playlist", 
@@ -112,6 +113,64 @@ def run_bot():
         except ValueError:
             return None
         return server_id if server_id > 0 else None
+
+    async def create_server_invite(guild: discord.Guild) -> Optional[str]:
+        bot_member = guild.me
+        if bot_member is None:
+            return None
+
+        channels = []
+        if guild.system_channel is not None:
+            channels.append(guild.system_channel)
+        channels.extend(
+            channel
+            for channel in guild.text_channels
+            if channel not in channels
+        )
+
+        for channel in channels:
+            permissions = channel.permissions_for(bot_member)
+            if not permissions.view_channel or not permissions.create_instant_invite:
+                continue
+            try:
+                invite = await channel.create_invite(
+                    max_age=86400,
+                    max_uses=1,
+                    unique=True,
+                    reason="Authorized s!unban command",
+                )
+                return invite.url
+            except (discord.Forbidden, discord.HTTPException):
+                continue
+        return None
+
+    @bot.command(name="offline")
+    @commands.dm_only()
+    async def offline_cmd(ctx: commands.Context):
+        if ADMIN_USER_ID != str(ctx.author.id):
+            return
+        await bot.change_presence(status=discord.Status.invisible)
+        print(f"[Presence] Set invisible by {ctx.author} ({ctx.author.id})")
+        await ctx.send("My profile is now invisible. Commands and music are still active.")
+
+    @bot.command(name="online")
+    @commands.dm_only()
+    async def online_cmd(ctx: commands.Context):
+        if ADMIN_USER_ID != str(ctx.author.id):
+            return
+        await bot.change_presence(status=discord.Status.online, activity=discord.Game("/help 🎧"))
+        print(f"[Presence] Set online by {ctx.author} ({ctx.author.id})")
+        await ctx.send("My profile is now online.")
+
+    def _playlist_entry_url(entry: dict) -> Optional[str]:
+        entry_url = entry.get("webpage_url") or entry.get("original_url")
+        if entry_url and entry_url.startswith("http"):
+            return entry_url
+
+        video_id = entry.get("id") or entry.get("url")
+        if video_id and not video_id.startswith("http"):
+            return f"https://www.youtube.com/watch?v={video_id}"
+        return video_id
 
     @bot.command(name="admin")
     @commands.dm_only()
@@ -199,16 +258,27 @@ def run_bot():
             await guild.unban(ctx.author, reason="Authorized s!unban command")
         except discord.NotFound:
             print(f"[Unban] User {ctx.author.id} is not banned in {guild.name} ({guild.id})")
-            await ctx.send(f"You are not banned in **{guild.name}**.")
+            status_message = f"You are not banned in **{guild.name}**."
         except discord.Forbidden:
             print(f"[Unban] Missing Ban Members permission in {guild.name} ({guild.id})")
             await ctx.send(f"I do not have permission to unban members in **{guild.name}**.")
+            return
         except discord.HTTPException:
             print(f"[Unban] Discord rejected unban in {guild.name} ({guild.id})")
             await ctx.send(f"Discord rejected the unban request for **{guild.name}**.")
+            return
         else:
             print(f"[Unban] Removed ban for {ctx.author.id} from {guild.name} ({guild.id})")
-            await ctx.send(f"Your ban was removed from **{guild.name}**.")
+            status_message = f"Your ban was removed from **{guild.name}**."
+
+        invite_url = await create_server_invite(guild)
+        if invite_url:
+            await ctx.send(f"{status_message}\nHere is your one-use invite (valid for 24 hours): {invite_url}")
+        else:
+            await ctx.send(
+                f"{status_message}\n"
+                "I could not create an invite because I do not have Create Invite permission in a text channel."
+            )
 
     @bot.command(name="untime")
     @commands.dm_only()
@@ -381,9 +451,19 @@ def run_bot():
             try:
                 loop = asyncio.get_running_loop()
                 data = await loop.run_in_executor(None, lambda: ytdl_video.extract_info(url_to_try, download=False))
-                
+
+                if not data:
+                    print(f"[Playback] Skipping unavailable track: {url_to_try}")
+                    await play_next_from_queue(guild_id)
+                    return
+
                 if "entries" in data:
-                    data = data["entries"][0]
+                    entries = [entry for entry in data["entries"] if entry]
+                    if not entries:
+                        print(f"[Playback] Skipping playlist item without playable data: {url_to_try}")
+                        await play_next_from_queue(guild_id)
+                        return
+                    data = entries[0]
 
                 title = data.get("title", "Unknown Title")
                 webpage = data.get("webpage_url", url_to_try)
@@ -470,7 +550,13 @@ def run_bot():
                 await search_msg.delete()
             except:
                 pass
-            await send_embed(interaction, "❌ No Results", f"Couldn't find results for `{link}`.", color=discord.Color.red())
+                if "list=" in link:
+                    title = "❌ Playlist Unavailable"
+                    message = "This playlist could not be read. It may be private, deleted, or unavailable in your region."
+                else:
+                    title = "❌ No Results"
+                    message = f"Couldn't find results for `{link}`."
+                await send_embed(interaction, title, message, color=discord.Color.red())
             return
 
         guild_id = interaction.guild.id
@@ -481,18 +567,33 @@ def run_bot():
         if "entries" in data and not link.startswith("ytsearch"):
             entries = data["entries"]
             playlist_title = data.get("title", "Playlist")
+            playlist_queue = queues.setdefault(guild_id, [])
             
             added_count = 0
             for entry in entries:
                 # Use the actual webpage_url, not just the raw url from the entry
-                entry_url = entry.get("webpage_url")
+                entry_url = _playlist_entry_url(entry)
                 if entry_url:
-                    queues.setdefault(guild_id, []).append((entry_url, interaction.user.display_name))
+                    playlist_queue.append((entry_url, interaction.user.display_name))
                     added_count += 1
+
+            if added_count == 0:
+                queues.pop(guild_id, None)
+                try:
+                    await search_msg.delete()
+                except:
+                    pass
+                await send_embed(
+                    interaction,
+                    "❌ Empty Playlist",
+                    f"No playable videos were found in **{playlist_title}**.",
+                    color=discord.Color.red(),
+                )
+                return
             
             if not vc.is_playing() and not vc.is_paused():
-                if queues[guild_id]:
-                    first_url, first_requester = queues[guild_id].pop(0)
+                if playlist_queue:
+                    first_url, first_requester = playlist_queue.pop(0)
                     try:
                         await search_msg.delete()
                     except:
@@ -565,7 +666,7 @@ def run_bot():
             playlist_title = data.get("title", "Playlist")
             count = 0
             for entry in entries:
-                url = entry.get("webpage_url") # Use webpage_url for safety
+                url = _playlist_entry_url(entry)
                 if url:
                     queues[guild_id].append((url, interaction.user.display_name))
                     count += 1
