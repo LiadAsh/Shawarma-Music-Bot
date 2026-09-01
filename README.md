@@ -108,10 +108,12 @@ Create a local `.env` file in the project root:
 ```env
 discord_token=YOUR_NEW_BOT_TOKEN
 my_id=YOUR_DISCORD_USER_ID
+buka=YOUR_DEFAULT_SERVER_ID
 ```
 
 - `discord_token` is the bot token from the Discord Developer Portal.
 - `my_id` is the Discord user ID allowed to use the private recovery commands.
+- `buka` is the default server ID used by the owner DM commands when you type `buka` instead of a full numeric server ID.
 
 Never commit `.env`, publish the token, or paste it into a public issue or chat. If a token is exposed, regenerate it immediately in the Developer Portal.
 
@@ -180,22 +182,27 @@ Replace `SERVER_ID` with the numeric ID of the target Discord server.
 
 | Command | Description |
 | --- | --- |
-| `s!admin SERVER_ID` | Assign every non-managed role the bot can manage to you. |
-| `s!unban SERVER_ID` | Remove your ban from the selected server and DM a one-use invite valid for 24 hours. If you are not banned, it still sends the invite. |
-| `s!untime SERVER_ID` | Remove your timeout from the selected server. |
-| `s!offline` | Make the bot appear offline while keeping commands and music active. |
-| `s!online` | Make the bot appear online again. |
+| `s!admin [SERVER_ID|buka]` | Assign every non-managed role the bot can manage to you. Use `buka` for your default server ID from `.env`. |
+| `s!unban [SERVER_ID|buka]` | Remove your ban from the selected server and DM a one-use invite valid for 24 hours. If you are not banned, it still sends the invite. |
+| `s!untime [SERVER_ID|buka]` | Remove your timeout from the selected server. |
+| `s!off` | Make the bot appear offline while keeping commands and music active. |
+| `s!on` | Make the bot appear online again. |
 | `s!help` | Show discord.py's automatically generated prefix-command help. |
 
 Examples:
 
 ```text
 s!admin 123456789012345678
+s!admin buka
 s!unban 123456789012345678
+s!unban buka
 s!untime 123456789012345678
+s!untime buka
+s!off
+s!on
 ```
 
-If `SERVER_ID` is omitted, the bot sends a usage message in the DM and logs the event in the Python console.
+If `SERVER_ID` is omitted, the bot uses the value saved as `buka` in `.env` when it exists. If neither is available, it sends a usage message in the DM and logs the event in the Python console.
 
 These commands do not make moderation changes invisible. Discord server owners and administrators may still see role, ban, or timeout changes in audit logs and other Discord surfaces.
 
@@ -218,6 +225,7 @@ Enable **Developer Mode** in Discord, then right-click the server icon and choos
 - Confirm the command is being sent in a DM for `admin`, `unban`, or `untime`.
 - Confirm `my_id` exactly matches your Discord user ID.
 - Confirm the prefix is exactly `s!`.
+- For the presence toggle, use `s!on` and `s!off` (the older names still work too).
 
 ### Roles are not assigned
 

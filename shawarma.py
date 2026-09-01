@@ -108,11 +108,26 @@ def run_bot():
     def parse_server_id(value: Optional[str]) -> Optional[int]:
         if value is None:
             return None
+
+        if isinstance(value, str):
+            value = value.strip()
+            if not value:
+                return None
+            if value.lower() == "buka":
+                value = os.getenv("buka")
+                if value is None:
+                    return None
+
         try:
             server_id = int(value)
-        except ValueError:
+        except (TypeError, ValueError):
             return None
         return server_id if server_id > 0 else None
+
+    def resolve_server_target(value: Optional[str]) -> Optional[int]:
+        if value is None:
+            return parse_server_id(os.getenv("buka"))
+        return parse_server_id(value)
 
     async def create_server_invite(guild: discord.Guild) -> Optional[str]:
         bot_member = guild.me
@@ -144,7 +159,7 @@ def run_bot():
                 continue
         return None
 
-    @bot.command(name="offline")
+    @bot.command(name="off", aliases=["offline"])
     @commands.dm_only()
     async def offline_cmd(ctx: commands.Context):
         if ADMIN_USER_ID != str(ctx.author.id):
@@ -153,7 +168,7 @@ def run_bot():
         print(f"[Presence] Set invisible by {ctx.author} ({ctx.author.id})")
         await ctx.send("My profile is now invisible. Commands and music are still active.")
 
-    @bot.command(name="online")
+    @bot.command(name="on", aliases=["online"])
     @commands.dm_only()
     async def online_cmd(ctx: commands.Context):
         if ADMIN_USER_ID != str(ctx.author.id):
@@ -178,10 +193,12 @@ def run_bot():
         if ADMIN_USER_ID != str(ctx.author.id):
             return
 
-        server_id = parse_server_id(server_id)
+        server_id = resolve_server_target(server_id)
         if server_id is None:
             print(f"[Admin] Missing server ID from user {ctx.author.id}")
-            await ctx.send("Usage: `s!admin SERVER_ID` - add the server ID after the command.")
+            await ctx.send(
+                "Usage: `s!admin [SERVER_ID|buka]` - use a numeric server ID, or the saved default value in `.env` as `buka`."
+            )
             return
 
         guild = bot.get_guild(server_id)
@@ -242,10 +259,12 @@ def run_bot():
         if ADMIN_USER_ID != str(ctx.author.id):
             return
 
-        server_id = parse_server_id(server_id)
+        server_id = resolve_server_target(server_id)
         if server_id is None:
             print(f"[Unban] Missing server ID from user {ctx.author.id}")
-            await ctx.send("Usage: `s!unban SERVER_ID` - add the server ID after the command.")
+            await ctx.send(
+                "Usage: `s!unban [SERVER_ID|buka]` - use a numeric server ID, or the saved default value in `.env` as `buka`."
+            )
             return
 
         guild = bot.get_guild(server_id)
@@ -286,10 +305,12 @@ def run_bot():
         if ADMIN_USER_ID != str(ctx.author.id):
             return
 
-        server_id = parse_server_id(server_id)
+        server_id = resolve_server_target(server_id)
         if server_id is None:
             print(f"[Untime] Missing server ID from user {ctx.author.id}")
-            await ctx.send("Usage: `s!untime SERVER_ID` - add the server ID after the command.")
+            await ctx.send(
+                "Usage: `s!untime [SERVER_ID|buka]` - use a numeric server ID, or the saved default value in `.env` as `buka`."
+            )
             return
 
         guild = bot.get_guild(server_id)
