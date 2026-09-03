@@ -117,6 +117,16 @@ buka=YOUR_DEFAULT_SERVER_ID
 
 Never commit `.env`, publish the token, or paste it into a public issue or chat. If a token is exposed, regenerate it immediately in the Developer Portal.
 
+### Default Bot Status
+
+In the `Variables Default Setters` section at the top of `shawarma.py`, set:
+
+```python
+BOT_ONLINE_BY_DEFAULT = False
+```
+
+Use `False` to start the bot as invisible, or `True` to start it online. The owner can still change the status later with `s!on` or `s!off`.
+
 ## Discord Bot Setup 🤖
 
 In the Developer Portal, enable these privileged intents under **Bot**:

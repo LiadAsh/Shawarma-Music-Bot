@@ -15,6 +15,9 @@ import nacl
 import yt_dlp
 from dotenv import load_dotenv
 
+# ---------------------- Variables Default Setters ----------------------
+BOT_ONLINE_BY_DEFAULT = False
+
 # ---------------------- Theme Colors ----------------------
 CYAN = 0x00FFFF
 WHITE = 0xFFFFFF
@@ -932,7 +935,12 @@ def run_bot():
         except Exception as e:
             print(f"[Bot Status] Failed to sync commands: {e}")
         print(f"[Bot Status] Logged in as {bot.user}")
-        await bot.change_presence(activity=discord.Game("/help 🎧"))
+        default_status = "online" if BOT_ONLINE_BY_DEFAULT else "offline (invisible)"
+        print(f"[Bot Status] Default status is set to: {default_status}")
+        if BOT_ONLINE_BY_DEFAULT:
+            await bot.change_presence(status=discord.Status.online, activity=discord.Game("/help 🎧"))
+        else:
+            await bot.change_presence(status=discord.Status.invisible)
 
     @bot.event
     async def on_voice_state_update(member, before, after):
